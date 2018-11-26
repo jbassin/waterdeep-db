@@ -4,6 +4,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const Faction = require("./models/faction");
 const Recap = require("./models/recap");
+const Level = require("./models/level");
 
 const app = express();
 app.use(morgan('combined'));
@@ -35,6 +36,15 @@ app.get('/recaps', (req, res) => {
             recaps
         })
     }).sort({_id:-1})
+});
+
+app.get('/levels', (req, res) => {
+    Level.find({}, (error, levels) => {
+        if (error) { console.error(error); }
+        res.send({
+            levels
+        })
+    }).sort({_id:1})
 });
 
 app.post('/factions', (req, res) => {
@@ -74,6 +84,30 @@ app.post('/recaps', (req, res) => {
             message: [
                 'Recap saved successfully!',
                 new_recap,
+            ],
+        })
+    })
+});
+
+app.post('/levels', (req, res) => {
+    const body = req.body;
+    const new_level = new Level({
+        name: body.name,
+        image: body.image,
+        locked: body.locked,
+        flavor: {
+            text: body.flavor.text,
+            author: body.flavor.author,
+        },
+        text: body.text,
+    });
+    new_level.save((error) => {
+        if (error) console.log(error);
+        res.send({
+            success: true,
+            message: [
+                'Level saved successfully!',
+                new_level,
             ],
         })
     })
