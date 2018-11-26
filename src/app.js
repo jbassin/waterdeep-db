@@ -5,6 +5,9 @@ const morgan = require('morgan');
 const Faction = require("./models/faction");
 const Recap = require("./models/recap");
 const Level = require("./models/level");
+const Employee = require("./models/employee");
+const Moneyflow = require("./models/moneyflow");
+const Prospect = require("./models/prospect");
 
 const app = express();
 app.use(morgan('combined'));
@@ -43,6 +46,33 @@ app.get('/levels', (req, res) => {
         if (error) { console.error(error); }
         res.send({
             levels
+        })
+    }).sort({_id:1})
+});
+
+app.get('/tavern_employees', (req, res) => {
+    Employee.find({}, (error, employees) => {
+        if (error) { console.error(error); }
+        res.send({
+            employees
+        })
+    }).sort({_id:1})
+});
+
+app.get('/tavern_moneyflow', (req, res) => {
+    Moneyflow.find({}, (error, moneyflow) => {
+        if (error) { console.error(error); }
+        res.send({
+            moneyflow
+        })
+    }).sort({_id:1})
+});
+
+app.get('/tavern_prospects', (req, res) => {
+    Prospect.find({}, (error, prospects) => {
+        if (error) { console.error(error); }
+        res.send({
+            prospects
         })
     }).sort({_id:1})
 });
@@ -108,6 +138,60 @@ app.post('/levels', (req, res) => {
             message: [
                 'Level saved successfully!',
                 new_level,
+            ],
+        })
+    })
+});
+
+app.post('/tavern_employees', (req, res) => {
+    const body = req.body;
+    const new_employee = new Employee({
+        name: body.name,
+        job: body.job,
+    });
+    new_employee.save((error) => {
+        if (error) console.log(error);
+        res.send({
+            success: true,
+            message: [
+                'Employee saved successfully!',
+                new_employee,
+            ],
+        })
+    })
+});
+
+app.post('/tavern_moneyflow', (req, res) => {
+    const body = req.body;
+    const new_moneyflow = new Moneyflow({
+        text: body.text,
+        value: body.value,
+    });
+    new_moneyflow.save((error) => {
+        if (error) console.log(error);
+        res.send({
+            success: true,
+            message: [
+                'Moneyflow saved successfully!',
+                new_moneyflow,
+            ],
+        })
+    })
+});
+
+app.post('/tavern_prospects', (req, res) => {
+    const body = req.body;
+    const new_prospect = new Prospect({
+        text: body.text,
+        value: body.value,
+    });
+    new_prospect.save((error) => {
+        if (error) console.log(error);
+        res.send({
+            success: true,
+            message: [
+                'Prospect saved successfully!',
+                new_prospect,
             ],
         })
     })
