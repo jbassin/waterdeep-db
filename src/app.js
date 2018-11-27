@@ -8,6 +8,7 @@ const Level = require("./models/level");
 const Employee = require("./models/employee");
 const Moneyflow = require("./models/moneyflow");
 const Prospect = require("./models/prospect");
+const Entry = require("./models/entry");
 
 const app = express();
 app.use(morgan('combined'));
@@ -73,6 +74,25 @@ app.get('/tavern_prospects', (req, res) => {
         if (error) { console.error(error); }
         res.send({
             prospects
+        })
+    }).sort({_id:1})
+});
+
+app.get('/entries', (req, res) => {
+    const title = req.query.title;
+    Entry.find({ title: title.replace(/_/g, ' ') }, 'title parent entry', (error, entries) => {
+        if (error) { console.error(error); }
+        res.send({
+            entries
+        })
+    }).sort({_id:1})
+});
+
+app.get('/entry_list', (req, res) => {
+    Entry.find({}, 'title', (error, entries) => {
+        if (error) { console.error(error); }
+        res.send({
+            entries
         })
     }).sort({_id:1})
 });
@@ -192,6 +212,34 @@ app.post('/tavern_prospects', (req, res) => {
             message: [
                 'Prospect saved successfully!',
                 new_prospect,
+            ],
+        })
+    })
+});
+
+app.post('/entries', (req, res) => {
+    const body = req.body;
+    console.log(body);
+    const entries = [];
+    body.entry.forEach((entry) => {
+        entries.push({
+            title: entry.title,
+            visible: entry.visible,
+            text: entry.text,
+        });
+    });
+    const new_entry = new Entry({
+        title: body.title,
+        parent: body.parent,
+        entry: entries,
+    });
+    new_entry.save((error) => {
+        if (error) console.log(error);
+        res.send({
+            success: true,
+            message: [
+                'Entry saved successfully!',
+                new_entry,
             ],
         })
     })
