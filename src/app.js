@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -22,6 +23,13 @@ db.on("error", console.error.bind(console, "connection error"));
 db.once("open", () => {
     console.log("Connection Succeeded");
 });
+
+setCharAt = (str, index, chr) => {
+    if (index > str.length - 1) {
+        return str;
+    }
+    return str.substr(0, index) + chr + str.substr(index + 1);
+};
 
 
 app.get('/factions', (req, res) => {
@@ -82,14 +90,62 @@ app.get('/entries', (req, res) => {
     const title = req.query.title;
     Entry.find({ title: title.replace(/_/g, ' ') }, 'title parent entry', (error, entries) => {
         if (error) { console.error(error); }
+        const formattedInfo = [];
+        _.each(entries, (page, pageIndex) => {
+            formattedInfo.push(page);
+            _.each(page.entry, (entry, entryIndex) => {
+                const entryArray = [];
+                _.each(entry.text.split('|'), (text) => {
+                    switch (text.charAt(0)) {
+                        case '@':
+                            entryArray.push({
+                                type: 'link',
+                                text: text.substr(1),
+                            });
+                            break;
+                        case '*':
+                            entryArray.push({
+                                type: 'bold',
+                                text: text.substr(1),
+                            });
+                            break;
+                        case '_':
+                            entryArray.push({
+                                type: 'italics',
+                                text: text.substr(1),
+                            });
+                            break;
+                        case '%':
+                            const rudeString = 'FUCKYOU';
+                            let obfuString = text.substr(1);
+                            for(let i = 0; i < obfuString.length; i += 1) {
+                                if (obfuString.charAt(i) === ' ') continue;
+                                obfuString = setCharAt(obfuString, i, rudeString.charAt(i % rudeString.length));
+                            }
+                            entryArray.push({
+                                type: 'obfuscated',
+                                text: obfuString,
+                            });
+                            break;
+                        default:
+                            entryArray.push({
+                                type: 'normal',
+                                text,
+                            });
+                            break;
+                    }
+                });
+                formattedInfo[pageIndex].entry[entryIndex].text = [JSON.stringify(entryArray)];
+            });
+        });
         res.send({
-            entries
+            entries: formattedInfo,
         })
     }).sort({_id:1})
 });
 
 app.get('/entry_list', (req, res) => {
-    Entry.find({}, 'title', (error, entries) => {
+    Entry.find({}, 'title parent', (error, entries) => {
         if (error) { console.error(error); }
         res.send({
             entries
